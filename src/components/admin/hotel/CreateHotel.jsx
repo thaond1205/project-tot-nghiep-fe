@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Upload, notification, Card, Form, Input, Button, InputNumber } from "antd";
+import { Upload, notification, Card, Form, Input, Button, InputNumber, Select } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import api from '../../../services/api'
-
+import localJson from '../../../local.json'
 
 const dummyRequest = ({ file, onSuccess }) => {
     setTimeout(() => {
@@ -10,22 +10,16 @@ const dummyRequest = ({ file, onSuccess }) => {
     }, 0);
 };
 
-
+const { Option } = Select;
 function CreateBranch() {
     const [form] = Form.useForm();
     const [listFile, setListFile] = useState([])
-    const [hotel, setHotel] = useState({
-        name: "",
-        city: "",
-        address: "",
-        totalNumberRoom: 0
-    })
+    const [address, setAddress] = useState(localJson)
 
     const formValue = {
         name: "",
         city: "",
         address: "",
-        totalNumberRoom: 0
     }
 
     const handleChange = ({ fileList }) => {
@@ -33,27 +27,13 @@ function CreateBranch() {
     };
 
 
-    const onChange = (event) => {
-        const target = event.target;
-        let name = target.name;
-        let value = target.type === "checkbox" ? target.checked : target.value;
-        setHotel({ ...hotel, [name]: value })
-    };
-
-    function onChangeNumber(value) {
-        setHotel({ ...hotel, totalNumberRoom: value })
-    }
-
-    const resetForm = () => {
-        setHotel(formValue)
-    }
-
-    function insert() {
+    function insert(hotel) {
         var data = new FormData();
         data.append("hotel", JSON.stringify(hotel))
         for (let i = 0; i < listFile.length; i++) {
             data.append('file', listFile[i].originFileObj);
         }
+
         var config = {
             method: 'post',
             url: '/owner/hotels/image_hotels',
@@ -63,7 +43,7 @@ function CreateBranch() {
             data: data
         };
         api(config).then(res => {
-            resetForm();
+            form.resetFields();
             notification["success"]({
                 message: res.data.message,
             });
@@ -75,10 +55,19 @@ function CreateBranch() {
         })
     }
 
-    const onFinish = () => {
-        insert();
-
-        form.resetFields();
+    const onFinish = (fieldsValue) => {
+        if (listFile.length < 5) {
+            notification["error"]({
+                message: "Bạn phải chọn tối thiểu 5 ảnh khách sạn",
+            });
+        }
+        else {
+            const { name, address } = fieldsValue;
+            const hotel = {
+                name, address, city: address,
+            }
+            insert(hotel);
+        }
     };
 
     const [componentSize] = useState('default');
@@ -98,6 +87,10 @@ function CreateBranch() {
                     </li>
                 </ol>
             </nav>
+            <hr />
+            <h3 className="text-center mb-2 mt-2">
+                Thêm cơ sở
+            </h3>
             <hr />
             <Card className="main-container">
                 <Form
@@ -123,16 +116,7 @@ function CreateBranch() {
                                 message: 'Không được bỏ trống tên cơ sở!',
                             },
                         ]}>
-                        <Input name="name" onChange={onChange} />
-                    </Form.Item>
-                    <Form.Item label="Thành phố" name="city"
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Không được bỏ trống thành phố!',
-                            },
-                        ]}>
-                        <Input name="city" onChange={onChange} />
+                        <Input name="name" />
                     </Form.Item>
                     <Form.Item label="Địa chỉ" name="address"
                         rules={[
@@ -141,17 +125,13 @@ function CreateBranch() {
                                 message: 'Không được bỏ trống địa chỉ!',
                             },
                         ]}>
-                        <Input name="address" onChange={onChange} />
-                    </Form.Item>
+                        <Select
+                            placeholder="Danh sách địa chỉ">
+                            {address.map((item, index) => (
+                                <Option key={index} value={item.name}>{item.name}</Option>
+                            ))}
 
-                    <Form.Item label="Tổng số phòng" name="totalNumberRoom"
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Không được bỏ trống số phòng trong khách sạn!',
-                            },
-                        ]}>
-                        <InputNumber name="totalNumberRoom" onChange={onChangeNumber} />
+                        </Select>
                     </Form.Item>
 
                     <Form.Item label="Ảnh khách sạn" name="image">
@@ -172,7 +152,7 @@ function CreateBranch() {
                             span: 16,
                         }}
                     >
-                        <Button type="primary" htmlType="submit">
+                        <Button ghost type="primary" htmlType="submit">
                             Thêm khách sạn
                         </Button>
                     </Form.Item>

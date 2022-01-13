@@ -1,15 +1,15 @@
+import { Card, Col, Row } from "antd";
 import React, { useEffect, useState } from "react";
+import api from "../../services/api";
+import { Link } from "react-router-dom";
 
-import { Row, Col } from "antd";
-import { Card } from "antd";
-import axios from "axios";
 const { Meta } = Card;
 
 function AppFeature() {
   const [hotels, setHotels] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8080/api/owner/hotels").then((res) => {
+    api.get("/owner/hotels").then((res) => {
       console.log(res);
       setHotels(res.data.data);
     });
@@ -35,55 +35,33 @@ function AppFeature() {
           <p>Các thương hiệu khách sạn đối tác hàng đầu</p>
         </div>
         <Row gutter={[16, 16]}>
-          {hotels.map((item, index) => (
-            <Col
-              key={index}
-              xs={{ span: 24 }}
-              sm={{ span: 12 }}
-              md={{ span: 8 }}
-            >
-              <Card
-                hoverable
-                cover={
-                  <img
-                    height={240}
-                    width={300}
-                    alt="Modern Design"
-                    src={getImage(item.images)}
-                  />
-                }
+          {hotels
+            .filter((item) => item.isEnabled === 1)
+            .map((item, index) => (
+              <Col
+                key={index}
+                xs={{ span: 24 }}
+                sm={{ span: 12 }}
+                md={{ span: 8 }}
               >
-                <Meta title={item.name} />
-                <Meta title={`Thành phố ${item.city}`} />
-              </Card>
-            </Col>
-          ))}
-
-          {/* <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
-            <Card hoverable cover={<img alt="Test" src={image2} />}>
-              <Meta title="Clean and Elegant" />
-            </Card>
-          </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
-            <Card hoverable cover={<img alt="Test" src={image3} />}>
-              <Meta title="Great Support" />
-            </Card>
-          </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
-            <Card hoverable cover={<img alt="Test" src={image4} />}>
-              <Meta title="Easy to customise" />
-            </Card>
-          </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
-            <Card hoverable cover={<img alt="Test" src={image5} />}>
-              <Meta title="Unlimited Features" />
-            </Card>
-          </Col>
-          <Col xs={{ span: 24 }} sm={{ span: 12 }} md={{ span: 8 }}>
-            <Card hoverable cover={<img alt="Test" src={image6} />}>
-              <Meta title="Advanced Options" />
-            </Card>
-          </Col> */}
+                <Link to={`/hotel/${item.id}`}>
+                  <Card
+                    hoverable
+                    cover={
+                      <img
+                        height={240}
+                        width={300}
+                        alt="Modern Design"
+                        src={getImage(item.images)}
+                      />
+                    }
+                  >
+                    <Meta title={item.name} />
+                    <Meta title={`Thành phố ${item.city}`} />
+                  </Card>
+                </Link>
+              </Col>
+            ))}
         </Row>
       </div>
     </div>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "../../../services/api"
-import { Divider, Table, Switch, Popconfirm, Col, Form, Select, Tag } from 'antd';
-import { Link } from "react-router-dom/cjs/react-router-dom.min";
+import { Table, Switch, Popconfirm, Col, Form, Select, Tag, Row, notification, Popover, Image } from 'antd';
+
+
 
 const { Option } = Select
 function ListRoom(props) {
@@ -9,94 +10,116 @@ function ListRoom(props) {
     const [rooms, setRooms] = useState([])
     const [hotels, setHotels] = useState([])
     const [idHotel, setIdHotel] = useState(0)
+    const [idTypeRoom, setIdTypeRoom] = useState(null)
+    const [typeRooms, setTypeRooms] = useState([])
 
     useEffect(() => {
-        const getHotels = () => {
-            api.get("/owner/hotels").then(res => {
-                setHotels(res.data.data)
-            })
-        }
-        const getRooms = () => {
-            const config = {
-                params: {
-                    id: idHotel
-                }
-            }
-            api.get("/owner/rooms", config).then((res) => {
-                console.log(res);
-                if (res.data !== null) {
-                    setRooms(res.data.data);
-                } else {
-                    console.log(res.message);
-                }
-            })
-                .catch((err) => {
-                    console.log(err);
-                });
-        }
         getHotels();
+        getTypeRooms();
         if (idHotel !== 0) {
             getRooms();
         }
-    }, [idHotel])
+    }, [idHotel, idTypeRoom])
 
+    const getTypeRooms = () => {
+        api.get("/owner/typerooms").then(res => {
+            setTypeRooms(res.data.data)
+        })
+    }
+
+    const getHotels = () => {
+        api.get("/owner/hotels").then(res => {
+            setHotels(res.data.data)
+        })
+    }
+
+    const getRooms = () => {
+        const config = {
+            params: {
+                idHotel, idTypeRoom
+            }
+        }
+        api.get("/owner/rooms", config).then((res) => {
+            console.log(res);
+            if (res.data !== null) {
+                setRooms(res.data.data);
+            } else {
+                console.log(res.message);
+            }
+        }).catch((err) => {
+            console.log(err);
+        });
+    }
 
 
 
     function confirm(item) {
-        // console.log(item);
-        // const setIsEnabled = item.isEnabled === 0 ? 1 : 0;
-        // item.isEnabled = setIsEnabled;
-        // var data = new FormData();
-        // data.append("hotel", JSON.stringify(item))
+        var config = {
+            method: 'put',
+            url: `/owner/rooms/${item.id}`,
+        };
+        api(config).then(res => {
+            console.log(res);
 
-        // var config = {
-        //     method: 'put',
-        //     url: `/owner/hotels/image_hotels/${item.id}`,
-        //     headers: {
-        //         "content-type": "multipart/form-data",
-        //     },
-        //     data: data
-        // };
-        // api(config).then(res => {
-
-        //     const indexToUpdate = hotels.findIndex(
-        //         (hotel) => hotel.id === item.id
-        //     );
-        //     const updateHotels = [...hotels]; // creates a copy of the array
-
-        //     updateHotels[indexToUpdate].isEnabled =
-        //         item.isEnabled === 0 ? 0 : 1;
-        //     setHotels(updateHotels);
-        //     notification["success"]({
-        //         message: res.data.message,
-        //     });
-        // }).catch(err => {
-        //     console.log(err);
-        // })
+            const indexToUpdate = rooms.findIndex(
+                (room) => room.id === item.id
+            );
+            const updateRooms = [...rooms]; // creates a copy of the array
+            updateRooms[indexToUpdate].enabled = res.data.data.enabled
+            updateRooms[indexToUpdate].description = res.data.data.description
+            setRooms(updateRooms);
+            notification["success"]({
+                message: res.data.message,
+            });
+        }).catch(err => {
+            console.log(err);
+        })
     }
 
-    const msgLockHotel = `Bạn có chắc muốn khóa `
-    const msgOpenHotel = `Bạn có chắc muốn mở khóa `
+    const msgLockRoom = `Bạn có chắc muốn khóa phòng `
+    const msgOpenRoom = `Bạn có chắc muốn mở khóa phòng `
+
+    const getImageTienIch = (image) => {
+        if (image) {
+            return `http://localhost:8080/api/rest/files/image_utilities/${image}`
+        }
+    }
 
     const columns = [
-
+        {
+            title: 'STT',
+            key: 'index',
+            render: (text, record, index) => index + 1
+        },
         {
             title: 'Tên phòng',
             dataIndex: 'numberRoom',
             key: 'numberRoom',
         },
         {
-            title: 'Mô tả phòng',
+            title: 'Tình trạng phòng',
             dataIndex: 'status',
             key: 'status',
+        },
+        {
+            title: 'Mô tả phòng',
+            dataIndex: 'description',
+            key: 'description',
         },
         {
             title: 'Thể loại phòng',
             dataIndex: 'nameTypeRoom',
             key: 'nameTypeRoom',
             render: nameTypeRoom => {
-                let color = nameTypeRoom === "Phòng đơn" ? 'geekblue' : 'green';
+                let color;
+                if (nameTypeRoom === "Phòng đơn") {
+                    color = 'geekblue'
+                } else if (nameTypeRoom === "Phòng đôi") {
+                    color = 'green'
+                }
+                else if (nameTypeRoom === "Phòng vip") {
+                    color = 'red'
+                }
                 return (
                     <Tag color={color} key={nameTypeRoom}>
                         {nameTypeRoom !== null ? nameTypeRoom.toUpperCase() : ""}
@@ -106,24 +129,37 @@ function ListRoom(props) {
         },
         {
             title: 'Trạng thái',
-            key: 'isEnabled',
-            dataIndex: 'isEnabled',
+            key: 'enabled',
+            dataIndex: 'enabled',
             render: (enabled, record) => (
-                <Popconfirm placement="right" title={record.isEnabled === 1 ? `${msgLockHotel} ${record.name}` : `${msgOpenHotel} ${record.name}`} onConfirm={() => confirm(record)} okText="Yes" cancelText="No">
+                <Popconfirm placement="right" title={record.enabled ? `${msgLockRoom} ${record.numberRoom}` : `${msgOpenRoom} ${record.numberRoom}`} onConfirm={() => confirm(record)} okText="Yes" cancelText="No">
                     <Switch checked={record.enabled} >
                     </Switch>
                 </Popconfirm>
             )
         },
         {
-            title: 'Action',
-            key: 'action',
-            render: (text, record) => (
-                <span>
-                    <Link>Update {`Phòng ${record.numberRoom}`} </Link>
-                    <Divider type="vertical" />
-                </span>
-            ),
+            title: 'Tiện ích phòng',
+            key: '1',
+            dataIndex: 'imagesTienIch',
+            render: (imagesTienIch, record, index) => {
+                return (
+                    <Popover
+                        placement="left"
+                        title={`Chi tiết tiện ích phòng`}
+                        content={() => (
+                            imagesTienIch.map((item, idx) => (
+                                <p key={idx}>
+                                    <Image width={150} src={getImageTienIch(item)} />
+                                </p>
+                            ))
+                        )}
+                        trigger="hover"
+                    >
+                        <a href="#!">Chi tiết tiện ích </a>
+                    </Popover>
+                )
+            },
         },
     ];
 
@@ -145,18 +181,37 @@ function ListRoom(props) {
                 </ol>
             </nav>
             <hr />
-            <Col span={8} key={5}>
-                <Form.Item
-                    name="gender"
-                    label="Chọn cơ sở"
-                >
-                    <Select placeholder="Chọn cơ sở" onChange={(id) => setIdHotel(id)}>
-                        {hotels.map((item, index) => (
-                            <Option key={index} value={item.id}>{item.city}</Option>
-                        ))}
-                    </Select>
-                </Form.Item>
-            </Col>
+            <Row >
+                <Col span={8} key={5}>
+                    <Form.Item
+                        name="gender"
+                        label="Chọn cơ sở"
+                    >
+                        <Select placeholder="Chọn cơ sở" onChange={(id) => setIdHotel(id)}>
+                            {hotels.map((item, index) => (
+                                <Option key={index} value={item.id}>{item.name}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                </Col>
+
+                <Col span={8} key={7}>
+
+                </Col>
+
+                <Col span={8} key={6}>
+                    <Form.Item
+                        label="Chọn loại phòng"
+                    >
+                        <Select placeholder="Chọn loại phòng" onChange={(id) => setIdTypeRoom(id)}>
+                            <Option key={Math.random().toString()} value={null}>Tất cả loại phòng</Option>
+                            {typeRooms.map((item, index) => (
+                                <Option key={index} value={item.id}>{item.name}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                </Col>
+            </Row>
             <Table columns={columns} dataSource={rooms} />
         </div>
     );

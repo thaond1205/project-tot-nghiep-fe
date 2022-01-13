@@ -1,9 +1,13 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import authService from '../../../services/auth.service';
 import TokenService from '../../../services/token.service';
 
 function Header(props) {
-
     const userAuthen = TokenService.getUser();
+    const logOut = () => {
+        authService.logout();
+    }
 
     return (
         <div className="navbar-custom">
@@ -316,11 +320,11 @@ function Header(props) {
                     </a>
                 </li>
                 <li className="dropdown notification-list">
-                    <a
+                    <button
                         className="nav-link dropdown-toggle nav-user arrow-none me-0"
                         data-bs-toggle="dropdown"
-                        href="#!"
-                        role="button"
+                        // href=""
+                        // role="button"
                         aria-haspopup="false"
                         aria-expanded="false"
                     >
@@ -335,47 +339,35 @@ function Header(props) {
                             <span className="account-user-name">{userAuthen.username}</span>
                             <span className="account-position">{userAuthen.roles}</span>
                         </span>
-                    </a>
+                    </button>
+
                     <div className="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu profile-dropdown">
-                        {/* item*/}
+
+
                         <div className=" dropdown-header noti-title">
                             <h6 className="text-overflow m-0">Xin chào !</h6>
                         </div>
-                        {/* item*/}
-                        <a
-                            href="#!"
+
+                        <Link
+                            to="/admin/profile"
                             className="dropdown-item notify-item"
                         >
                             <i className="mdi mdi-account-circle me-1" />
                             <span>Tài khoản của tôi</span>
-                        </a>
-                        {/* item*/}
-                        <a
-                            href="#!"
+                        </Link>
+
+                        <Link
+                            to="/admin/change-password"
                             className="dropdown-item notify-item"
                         >
                             <i className="mdi mdi-account-edit me-1" />
-                            <span>Cài đặt</span>
-                        </a>
-                        {/* item*/}
+                            <span>Đổi mật khẩu</span>
+                        </Link>
+
                         <a
-                            href="#!"
-                            className="dropdown-item notify-item"
-                        >
-                            <i className="mdi mdi-lifebuoy me-1" />
-                            <span>Hỗ trợ</span>
-                        </a>
-                        {/* item*/}
-                        <a
-                            href="#!"
-                            className="dropdown-item notify-item"
-                        >
-                            <i className="mdi mdi-lock-outline me-1" />
-                            <span>Lock Screen</span>
-                        </a>
-                        {/* item*/}
-                        <a
-                            href="#!"
+                            href='/system-admin'
+                            role='button'
+                            onClick={logOut}
                             className="dropdown-item notify-item"
                         >
                             <i className="mdi mdi-logout me-1" />

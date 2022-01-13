@@ -1,33 +1,30 @@
 
-import { Popconfirm, Table, Switch, notification, Row, Col, Form, Input, Select, Tag, Button, Modal } from "antd";
+import { Popconfirm, Table, Switch, notification, Row, Col, Form, Input, Select, Tag, Button } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom/cjs/react-router-dom.min";
 import api from "../../../services/api";
+import ModalChuyenCoSo from "./ModalChuyenCoSo";
 
+const user = "Tài khoản người dùng";
+const staff = "Tài khoản nhân viên";
+const ROLE_USER = "ROLE_USER";
+const ROLE_STAFF = "ROLE_STAFF";
 const { Option } = Select;
 function ListUser(props) {
     const [users, setUsers] = useState([]);
     const [filter, setFilter] = useState({
         role_name: "ROLE_USER",
     });
-    const [hotels, setHotels] = useState([])
     const [hotel, setHotel] = useState({})
-
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [componentSize] = useState('default');
+    const [form] = Form.useForm();
+    const msgLockUser = `Bạn có chắc muốn khóa tài khoản  `;
+    const msgOpenUser = `Bạn có muốn mở lại tài khoản này `;
+    const typingTimeoutref = useRef(null);
+    const [keyword, setKeyword] = useState("");
 
     useEffect(() => {
-        const getHotels = () => {
-            api.get("/owner/hotels").then((res) => {
-                if (res.data !== null) {
-                    setHotels(res.data.data);
-                } else {
-                    console.log(res.message);
-                }
-            })
-                .catch((err) => {
-                    console.log(err);
-                });
-        }
-
         const getUsers = () => {
             const config = {
                 params: {
@@ -46,16 +43,9 @@ function ListUser(props) {
                     console.log(err);
                 });
         }
-        getHotels();
         getUsers();
 
     }, [filter]);
-
-
-    const msgLockUser = `Bạn có chắc muốn khóa tài khoản  `;
-    const msgOpenUser = `Bạn có muốn mở lại tài khoản này `;
-    const typingTimeoutref = useRef(null);
-    const [keyword, setKeyword] = useState("");
 
     const onSearch = (event) => {
         const target = event.target;
@@ -69,11 +59,6 @@ function ListUser(props) {
             setKeyword(value);
         }, 300);
     };
-
-    const user = "Tài khoản người dùng";
-    const staff = "Tài khoản nhân viên";
-    const ROLE_USER = "ROLE_USER";
-    const ROLE_STAFF = "ROLE_STAFF";
 
     var newUsers = null;
     if (Array.isArray(users)) {
@@ -117,25 +102,19 @@ function ListUser(props) {
         });
     }
 
-
-    const [isModalVisible, setIsModalVisible] = useState(false);
-
     const showModal = (event, record) => {
         setHotel(record)
         setIsModalVisible(true);
     };
 
-    const handleOk = () => {
-        setIsModalVisible(false);
-    };
-
-    const handleCancel = () => {
-        setIsModalVisible(false);
-    };
-
     const columns = [
         {
-            title: 'Avata',
+            title: 'STT',
+            key: 'index',
+            render: (text, record, index) => index + 1
+        },
+        {
+            title: 'Ảnh',
             dataIndex: 'image',
             key: 'image',
             render: (image) => <img width="100px" src={getImage(image)} alt="" />
@@ -209,80 +188,13 @@ function ListUser(props) {
             render: (nameHotel, record, index) =>
             (
                 <Button type="ghost" onClick={(event) => showModal(event, record)} >
-                    Update {record.username}
+                    Chuyển cơ sở {record.username}
                 </Button>
             ),
             hidden: filter.role_name === ROLE_USER
         },
 
     ].filter(item => !item.hidden);
-
-    const [componentSize] = useState('default');
-    const [form] = Form.useForm();
-    const [idHotel, setIdHotel] = useState(1);
-
-    function update() {
-
-        const idUser = hotel.id;
-        var config = {
-            method: 'put',
-            url: `/owner/user/${idUser}/${idHotel}`,
-        };
-        api(config).then(res => {
-            const indexToUpdate = users.findIndex(
-                (user) => user.id === idUser
-            );
-            const updatedUsers = [...users]; // creates a copy of the array
-
-            updatedUsers[indexToUpdate].idHotel = res.data.data.idHotel
-            updatedUsers[indexToUpdate].nameHotel = res.data.data.nameHotel
-            setUsers(updatedUsers);
-            notification["success"]({
-                message: res.data.message,
-            });
-            if (res.status === 200) {
-                setIsModalVisible(false)
-            }
-        }).catch(err => {
-            notification["error"]({
-                message: err.response.data.message,
-            });
-        })
-    }
-
-
-
-    const onFinish = (fieldsValue) => {
-        update();
-    };
-
-    const modal = <Modal title="Chuyển cơ sở" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
-        <Form onFinish={onFinish}>
-            <Form.Item label="Cơ sở ">
-                <Select
-                    name="coso"
-                    onChange={(value) => {
-                        setIdHotel(value)
-                    }}
-                    placeholder="Danh sách cơ sở">
-                    {hotels.map((item, index) => (
-                        <Option key={index} value={item.id}>{item.name}</Option>
-                    ))}
-
-                </Select>
-            </Form.Item>
-            <Form.Item
-                wrapperCol={{
-                    offset: 8,
-                    span: 16,
-                }}
-            >
-                <Button type="primary" htmlType="submit">
-                    Ok
-                </Button>
-            </Form.Item>
-        </Form>
-    </Modal>
 
     return (
         <div >
@@ -306,7 +218,12 @@ function ListUser(props) {
             <hr />
             <div>
 
-                {modal}
+                <ModalChuyenCoSo
+                    hotel={hotel}
+                    setIsModalVisible={setIsModalVisible}
+                    isModalVisible={isModalVisible}
+                    users={users}
+                    setUsers={setUsers} />
 
                 <Form
                     labelCol={{

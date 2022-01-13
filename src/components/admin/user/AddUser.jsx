@@ -1,5 +1,4 @@
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import 'antd/dist/antd.css';
 import {
     Form,
     Input,
@@ -383,17 +382,11 @@ function AddUser(props) {
                                     showUploadList={false}>
 
                                     {loading.imageUrl ? <img src={loading.imageUrl} alt="avatar" style={{ width: '100%' }} /> : uploadButton}
-                                    {/* <div>
-                                        <PlusOutlined />
-                                        <div style={{ marginTop: 8 }}>Upload</div>
-                                    </div> */}
                                 </Upload>
                             </Form.Item>
                         </Col>
 
                     </Row>
-
-
 
                     <Form.Item
                         wrapperCol={{

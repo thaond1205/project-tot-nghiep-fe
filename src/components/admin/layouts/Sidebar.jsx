@@ -1,6 +1,59 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import TokenService from "../../../services/token.service";
 function Sidebar(props) {
+
+    const userAuthen = TokenService.getUser();
+
+    if (userAuthen.roles.includes("ROLE_STAFF")) {
+        return (
+            <div>
+                <div className="leftside-menu">
+                    <ul className="side-nav">
+                        <li className="side-nav-item">
+                            <a
+                                data-bs-toggle="collapse"
+                                href="#sidebarTasks"
+                                aria-expanded="false"
+                                aria-controls="sidebarTasks"
+                                className="side-nav-link"
+                            >
+                                <i className="uil-clipboard-alt" />
+                                <span> Quản lý hóa đơn </span>
+                                <span className="menu-arrow" />
+                            </a>
+                            <div className="collapse" id="sidebarTasks">
+                                <ul className="side-nav-second-level">
+                                    <li >
+                                        <Link to="/admin/dondat">
+                                            Danh sách đơn đặt
+                                        </Link>
+                                    </li>
+                                    <li >
+                                        <Link to="/admin/datphong">
+                                            Đặt Phòng
+                                        </Link>
+                                    </li>
+                                    <li >
+                                        <Link to="/admin/booking-history">
+                                            Lịch sử đơn đặt
+                                        </Link>
+                                    </li>
+                                    <li >
+                                        <Link to="/admin/order-service">
+                                            Order dịch vụ
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div>
             <div className="leftside-menu">
@@ -49,28 +102,20 @@ function Sidebar(props) {
                                 className="side-nav-link"
                             >
                                 <i className="uil-home-alt" />
-                                <span className="badge bg-success float-end">
-                                    4
-                                </span>
+
                                 <span> Thống kê </span>
                             </a>
                             <div className="collapse" id="sidebarDashboards">
                                 <ul className="side-nav-second-level">
                                     <li>
-                                        <a href="dashboard-analytics.html">
-                                            Analytics
-                                        </a>
+                                        <Link to="/admin/thongke">
+                                            Thống kê tổng
+                                        </Link>
                                     </li>
                                     <li>
-                                        <a href="dashboard-crm.html">CRM</a>
-                                    </li>
-                                    <li>
-                                        <a href="index.html">Ecommerce</a>
-                                    </li>
-                                    <li>
-                                        <a href="dashboard-projects.html">
-                                            Projects
-                                        </a>
+                                        <Link to="/admin/thong-ke-theo-co-so">
+                                            Thống kê theo cơ sở
+                                        </Link>
                                     </li>
                                 </ul>
                             </div>
@@ -86,7 +131,7 @@ function Sidebar(props) {
                                 aria-controls="sidebarUser"
                                 className="side-nav-link"
                             >
-                                <i className="uil-home-alt" />
+                                <i className="uil-horizontal-align-center" />
                                 <span> Quản lý cơ sở </span>
                                 <span className="menu-arrow" />
                             </a>
@@ -151,11 +196,6 @@ function Sidebar(props) {
                                             Danh sách phòng
                                         </Link>
                                     </li>
-                                    <li>
-                                        <Link to="/admin/room/add">
-                                            Sửa phòng
-                                        </Link>
-                                    </li>
                                 </ul>
                             </div>
                         </li>
@@ -180,7 +220,17 @@ function Sidebar(props) {
                                     </li>
                                     <li>
                                         <Link to="/admin/type-room/add">
-                                            Sửa loại phòng
+                                            Thêm loại phòng
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/admin/hote-type-room">
+                                            Danh sách phòng khách sạn
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/admin/hote-type-room/add">
+                                            Thêm phòng khách sạn
                                         </Link>
                                     </li>
                                 </ul>
@@ -198,22 +248,27 @@ function Sidebar(props) {
                                 <span> Quản lý tiện ích </span>
                                 <span className="menu-arrow" />
                             </a>
+                            <div className="collapse" id="sidebarEcommerce">
+                                <ul className="side-nav-second-level">
+                                    <li >
+                                        <Link to="/admin/dstienich">
+                                            Danh sách tiện ích
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/admin/themtienich">
+                                            Thêm tiện ích
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/admin/themtienichphong">
+                                            Thêm tiện ích phòng
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
                         </li>
 
-                        <li className="side-nav-item">
-                            <a
-                                data-bs-toggle="collapse"
-                                href="#sidebarEmail"
-                                aria-expanded="false"
-                                aria-controls="sidebarEmail"
-                                className="side-nav-link"
-                            >
-                                <i className="uil-envelope" />
-                                <span> Quản lý đặt phòng </span>
-                                <span className="menu-arrow" />
-                            </a>
-                            <div className="collapse" id="sidebarEmail"></div>
-                        </li>
                         <li className="side-nav-item">
                             <a
                                 data-bs-toggle="collapse"
@@ -223,13 +278,27 @@ function Sidebar(props) {
                                 className="side-nav-link"
                             >
                                 <i className="uil-briefcase" />
-                                <span> Quản lý vourcher </span>
+                                <span> Quản lý dịch vụ </span>
                                 <span className="menu-arrow" />
                             </a>
                             <div
                                 className="collapse"
                                 id="sidebarProjects"
-                            ></div>
+                            >
+                                <ul className="side-nav-second-level">
+                                    <li >
+                                        <Link to="/admin/dsdichvu">
+                                            Danh sách dịch vụ
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/admin/themdichvu">
+                                            Thêm dịch vụ
+                                        </Link>
+                                    </li>
+                                </ul>
+
+                            </div>
                         </li>
                         <li className="side-nav-item">
                             <a
@@ -249,10 +318,34 @@ function Sidebar(props) {
                                 className="side-nav-link"
                             >
                                 <i className="uil-clipboard-alt" />
-                                <span> Quản lý loại phòng </span>
+                                <span> Quản lý đơn đặt </span>
                                 <span className="menu-arrow" />
                             </a>
-                            <div className="collapse" id="sidebarTasks"></div>
+                            <div className="collapse" id="sidebarTasks">
+                                <ul className="side-nav-second-level">
+
+                                    <li >
+                                        <Link to="/admin/don-dat/lich-su-don-dat">
+                                            Lịch sử đơn đặt
+                                        </Link>
+                                    </li>
+                                    <li >
+                                        <Link to="/admin/don-dat/cancel-booking">
+                                            Đơn đặt đã hủy
+                                        </Link>
+                                    </li>
+                                    <li >
+                                        <Link to="/admin/don-dat/check-in">
+                                            Đơn đặt đã nhận phòng
+                                        </Link>
+                                    </li>
+                                    <li >
+                                        <Link to="/admin/don-dat/check-out">
+                                            Đơn đặt đã trả phòng
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
                         </li>
                     </ul>
                     {/* Help Box */}

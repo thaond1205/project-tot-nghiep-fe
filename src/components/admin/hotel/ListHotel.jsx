@@ -1,18 +1,45 @@
 import React, { useState, useEffect } from "react";
 import api from "../../../services/api"
-import { Divider, Table, Switch, Popconfirm, notification } from 'antd';
-import { Link } from "react-router-dom/cjs/react-router-dom.min";
+import { Table, Switch, Popconfirm, notification, Image, Button, Modal, Form, Input, Select, Upload, Row, Col } from 'antd';
+import localJson from '../../../local.json'
+import { Link } from "react-router-dom";
+import { PlusOutlined } from "@ant-design/icons";
+const { Option } = Select;
 
+const dummyRequest = ({ file, onSuccess }) => {
+    setTimeout(() => {
+        onSuccess("ok");
+    }, 0);
+};
 function ListHotel(props) {
 
     const [hotels, setHotels] = useState([])
+    const [hotelEdit, setHotelEdit] = useState(null)
+    const [isModalVisible, setIsModalVisible] = useState(false)
+    const msgLockHotel = `Bạn có chắc muốn khóa `
+    const msgOpenHotel = `Bạn có chắc muốn mở khóa `
+    const [address, setAddress] = useState(localJson)
+    const [listFile, setListFile] = useState([])
+    const [arrImageOld, setArrImageOld] = useState([])
+    const [form] = Form.useForm();
 
     useEffect(() => {
         getHotels();
     }, [])
 
-    const getHotels = () => {
+    useEffect(() => {
 
+        var arrImage = hotelEdit && hotelEdit.images.split(",")
+        setArrImageOld(arrImage)
+        if (hotelEdit) {
+            const { name, address } = hotelEdit
+            form.setFieldsValue({
+                name, address
+            })
+        }
+    }, [hotelEdit])
+
+    const getHotels = () => {
         api.get("/owner/hotels").then((res) => {
             console.log(res);
             if (res.data !== null) {
@@ -20,10 +47,9 @@ function ListHotel(props) {
             } else {
                 console.log(res.message);
             }
-        })
-            .catch((err) => {
-                console.log(err);
-            });
+        }).catch((err) => {
+            console.log(err);
+        });
     }
 
     const getImage = (image) => {
@@ -66,63 +92,188 @@ function ListHotel(props) {
         })
     }
 
-    const msgLockHotel = `Bạn có chắc muốn khóa `
-    const msgOpenHotel = `Bạn có chắc muốn mở khóa `
+    const handleChange = ({ fileList }) => {
+        setListFile(fileList)
+    };
+
+    const showModal = (record) => {
+        console.log(record);
+        setHotelEdit(record)
+        setIsModalVisible(true)
+    }
 
     const columns = [
         {
             title: 'Ảnh',
             dataIndex: 'images',
-            key: 'images',
-            render: (images) => <img alt="" width="100px" src={getImage(images)} />
+            key: '1',
+            render: (images) => <Image src={getImage(images)} width={100} />
         },
         {
-            title: 'Name',
+            title: 'Tên',
             dataIndex: 'name',
-            key: 'name',
+            key: '2',
             sorter: (a, b) => a.name.localeCompare(b.name),
             render: text => <span>{text}</span>,
         },
         {
             title: 'Thành phố',
             dataIndex: 'city',
-            key: 'city',
+            key: '3',
         },
         {
-            title: 'Address',
+            title: 'Địa chỉ',
             dataIndex: 'address',
-            key: 'address',
-        },
-        {
-            title: 'Tổng số phòng',
-            key: 'totalNumberRoom',
-            dataIndex: 'totalNumberRoom',
-            sorter: (a, b) => a.totalNumberRoom - b.totalNumberRoom
+            key: '4',
         },
         {
             title: 'Trạng thái',
-            key: 'isEnabled',
+            key: '5',
             dataIndex: 'isEnabled',
             render: (isEnabled, record) => (
                 <Popconfirm placement="right" title={record.isEnabled === 1 ? `${msgLockHotel} ${record.name}` : `${msgOpenHotel} ${record.name}`} onConfirm={() => confirm(record)} okText="Yes" cancelText="No">
-                    <Switch checked={isEnabled} ></Switch>
+                    <Switch checkedChildren="Khóa" unCheckedChildren="Mở" checked={isEnabled} ></Switch>
                 </Popconfirm>
             )
         },
         {
-            title: 'Action',
-            key: 'index',
+            title: 'Hành động',
+            key: '6',
             render: (text, record) => (
-                <span>
-                    <Link to={`/admin/hotel/update/${record.id}`}>Update {record.name}</Link>
-                    <Divider type="vertical" />
-                </span>
+                <Button onClick={() => showModal(record)} type="primary" ghost >Sửa {record.name}</Button>
             ),
         },
     ];
 
+    const updateHotel = (hotelUpdate) => {
+        var data = new FormData();
+        data.append("hotel", JSON.stringify(hotelUpdate))
+        if (listFile.length !== 0) {
+            for (let i = 0; i < listFile.length; i++) {
+                data.append('file', listFile[i].originFileObj);
+            }
+        }
+
+        var config = {
+            method: 'put',
+            url: `/owner/hotels/image_hotels/${hotelEdit.id}`,
+            headers: {
+                "content-type": "multipart/form-data",
+            },
+            data: data
+        };
+        api(config).then(res => {
+            const indexToUpdate = hotels.findIndex(
+                (item) => item.id === res.data.data.id
+            );
+            const updateHotels = [...hotels]
+            updateHotels[indexToUpdate] = res.data.data
+            setHotels(updateHotels)
+            setArrImageOld([])
+            setIsModalVisible(false)
+            form.resetFields();
+            notification["success"]({
+                message: res.data.message,
+            });
+        }).catch(err => {
+            console.log(err.response);
+            notification["error"]({
+                message: err.response.data.message,
+            });
+        })
+    }
+    const onFinish = (fieldsValue) => {
+        if (listFile.length >= 1 && listFile.length < 5) {
+            notification["error"]({
+                message: "Bạn phải chọn tối thiểu 5 ảnh khách sạn",
+            });
+        }
+        else {
+            const { name, address } = fieldsValue;
+            const { id, isEnabled } = hotelEdit;
+            const hotelUpdate = {
+                id, isEnabled,
+                name, address, city: address,
+            }
+            updateHotel(hotelUpdate);
+        }
+    }
     return (
-        <div className="container">
+        <div >
+            {hotelEdit && <Modal
+                width={1000}
+                title="Cập nhật thông tin khách sạn"
+                visible={isModalVisible}
+                okText="Sửa"
+                onOk={form.submit}
+                onCancel={() => setIsModalVisible(false)}
+            >
+                <Form
+                    labelCol={{
+                        span: 7,
+                    }}
+
+                    layout="horizontal"
+                    form={form}
+                    onFinish={onFinish}
+                    autoComplete="off"
+                >
+                    <Row>
+                        <Col span={18}>
+                            <Form.Item label="Tên" name="name">
+                                <Input disabled name="name" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={18}>
+                            <Form.Item label="Địa chỉ" name="address"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: 'Không được bỏ trống địa chỉ!',
+                                    },
+                                ]}>
+                                <Select
+                                    placeholder="Danh sách địa chỉ">
+                                    {address.map((item, index) => (
+                                        <Option key={index} value={item.name}>{item.name}</Option>
+                                    ))}
+
+                                </Select>
+                            </Form.Item>
+                        </Col>
+
+                        <Col span={18}>
+                            <Form.Item label="Ảnh cũ" name="imageOld">
+                                {
+                                    arrImageOld && arrImageOld.map((item, index) => (
+                                        <Image key={index}
+                                            width={100}
+                                            height={100}
+                                            src={getImage(item)}
+                                        />
+                                    ))
+                                }
+                            </Form.Item>
+                        </Col>
+
+                        <Col span={18}>
+                            <Form.Item label="Ảnh mới" name="image">
+                                <Upload
+                                    multiple={true}
+                                    customRequest={dummyRequest}
+                                    onChange={handleChange}
+                                    listType="picture-card">
+                                    <div>
+                                        <PlusOutlined />
+                                        <div style={{ marginTop: 8 }}>Upload</div>
+                                    </div>
+                                </Upload>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                </Form>
+
+            </Modal>}
             <nav aria-label="breadcrumb">
                 <ol className="breadcrumb">
                     <li className="breadcrumb-item">
@@ -137,6 +288,11 @@ function ListHotel(props) {
                 </ol>
             </nav>
             <hr />
+            <h3 className="text-center mb-2 mt-2">
+                Danh sách cơ sở
+            </h3>
+            <hr />
+
             <Table columns={columns} dataSource={hotels} />
         </div>
     );

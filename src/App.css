@@ -74,10 +74,11 @@ header
 }
 
 .header {
-  display: flex;
+  /* display: flex; */
   justify-content: space-between;
   align-items: center;
-  padding: 15px 0;
+  padding-top: 20px;
+  background-color: white;
 }
 
 .header .logo {
@@ -98,6 +99,7 @@ header
 
 .header .ant-anchor-wrapper {
   background: none;
+  padding-bottom: 20px;
 }
 
 .header .ant-anchor {
@@ -142,6 +144,14 @@ header
 .header .ant-anchor-link:hover:after {
   right: 5%;
   opacity: 1;
+}
+
+.dropd {
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 3px;
+  background-color: antiquewhite;
+  font-weight: bold;
 }
 
 /* ant menu */
@@ -284,12 +294,13 @@ how it works
 ------------
 */
 .worksBlock {
-  background: url("assets/images/bg-works.jpg") no-repeat;
-  background-position: 50% 0;
+  background: url("assets/images/Overview_1OK.jpg") no-repeat;
+  background-position: 100%;
   background-size: cover;
   background-attachment: fixed;
   color: #fff;
   position: relative;
+  height: 550px;
 }
 
 .worksBlock:before {
@@ -443,6 +454,8 @@ footer
 
 .mobileHidden {
   display: block;
+  margin-left: 500px;
+  margin-top: 15px;
 }
 
 /* 
@@ -462,7 +475,11 @@ responsive
 
   .mobileVisible {
     display: block;
+    float: right;
   }
+  /* .hide-button{
+    float: right;
+  } */
 
   .mobileHidden {
     display: none;

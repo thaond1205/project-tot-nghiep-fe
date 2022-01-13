@@ -1,9 +1,12 @@
 import React, { useRef, useState } from "react";
-
+import { Redirect } from "react-router";
 import Form from "react-validation/build/form";
 import Input from "react-validation/build/input";
 import CheckButton from "react-validation/build/button";
 import AuthService from "../../../services/auth.service";
+
+import { authentication } from "./isAuthen";
+import QuenMatKhau from "./QuenMatKhau";
 
 const required = (value) => {
     if (!value) {
@@ -46,7 +49,15 @@ function Login(props) {
 
             AuthService.login(username, password).then(
                 () => {
-                    props.history.push("/admin");
+                    if (localStorage.getItem("user")) {
+                        const user = JSON.parse(localStorage.getItem("user"));
+                        if (user.roles.includes("ROLE_STAFF")
+                        ) {
+                            props.history.push("/admin/dondat");
+                        } else {
+                            props.history.push("/admin");
+                        }
+                    }
                     window.location.reload();
                 },
                 (error) => {
@@ -65,6 +76,14 @@ function Login(props) {
             setLoading(false);
         }
     };
+    const [isModalVisible, setIsModalVisible] = useState(false)
+
+    if (authentication.isAuthenticationUser()) {
+        return <Redirect to="/" />
+    } else if (authentication.isAuthentication()) {
+        return <Redirect to="/admin" />
+    }
+
     return (
         <div>
             <div className="auth-fluid">
@@ -76,7 +95,7 @@ function Login(props) {
                                     <span>
                                         <img
                                             src="assets/images/logo-dark.png"
-                                            alt
+                                            alt=""
                                             height={18}
                                         />
                                     </span>
@@ -85,7 +104,7 @@ function Login(props) {
                                     <span>
                                         <img
                                             src="assets/images/logo.png"
-                                            alt
+                                            alt=""
                                             height={18}
                                         />
                                     </span>
@@ -110,16 +129,18 @@ function Login(props) {
                                         value={username}
                                         onChange={onChangeUsername}
                                         validations={[required]}
-                                        placeholder="Enter your username"
+                                        placeholder="Enter your username..."
                                     />
                                 </div>
                                 <div className="mb-3">
                                     <a
-                                        href="pages-recoverpw-2.html"
+                                        onClick={() => setIsModalVisible(true)}
+                                        href="#!"
                                         className="text-muted float-end"
                                     >
                                         <small>Forgot your password?</small>
                                     </a>
+
                                     <label
                                         htmlFor="password"
                                         className="form-label"
@@ -133,27 +154,11 @@ function Login(props) {
                                         value={password}
                                         onChange={onChangePassword}
                                         validations={[required]}
+                                        placeholder="Enter your password..."
                                     />
                                 </div>
-                                <div className="mb-3">
-                                    <div className="form-check">
-                                        <input
-                                            type="checkbox"
-                                            className="form-check-input"
-                                            id="checkbox-signin"
-                                        />
-                                        <label
-                                            className="form-check-label"
-                                            htmlFor="checkbox-signin"
-                                        >
-                                            Remember me
-                                        </label>
-                                    </div>
-                                </div>
+
                                 <div className="d-grid mb-0 text-center">
-                                    {/* <button className="btn btn-primary" type="submit">
-                    <i className="mdi mdi-login" /> Log In{" "}
-                  </button> */}
                                     <button
                                         className="btn btn-primary btn-block"
                                         disabled={loading}
@@ -179,72 +184,12 @@ function Login(props) {
                                     style={{ display: "none" }}
                                     ref={checkBtn}
                                 />
-                                <div className="text-center mt-4">
-                                    <p className="text-muted font-16">
-                                        Sign in with
-                                    </p>
-                                    <ul className="social-list list-inline mt-3">
-                                        <li className="list-inline-item">
-                                            <a
-                                                href="javascript: void(0);"
-                                                className="social-list-item border-primary text-primary"
-                                            >
-                                                <i className="mdi mdi-facebook" />
-                                            </a>
-                                        </li>
-                                        <li className="list-inline-item">
-                                            <a
-                                                href="javascript: void(0);"
-                                                className="social-list-item border-danger text-danger"
-                                            >
-                                                <i className="mdi mdi-google" />
-                                            </a>
-                                        </li>
-                                        <li className="list-inline-item">
-                                            <a
-                                                href="javascript: void(0);"
-                                                className="social-list-item border-info text-info"
-                                            >
-                                                <i className="mdi mdi-twitter" />
-                                            </a>
-                                        </li>
-                                        <li className="list-inline-item">
-                                            <a
-                                                href="javascript: void(0);"
-                                                className="social-list-item border-secondary text-secondary"
-                                            >
-                                                <i className="mdi mdi-github" />
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
                             </Form>
-                            <footer className="footer footer-alt">
-                                <p className="text-muted">
-                                    Don't have an account?{" "}
-                                    <a
-                                        href="pages-register-2.html"
-                                        className="text-muted ms-1"
-                                    >
-                                        <b>Sign Up</b>
-                                    </a>
-                                </p>
-                            </footer>
                         </div>
                     </div>
                 </div>
-                <div className="auth-fluid-right text-center">
-                    <div className="auth-user-testimonial">
-                        <h2 className="mb-3">I love the color!</h2>
-                        <p className="lead">
-                            <i className="mdi mdi-format-quote-open" /> It's a
-                            elegent templete. I love it very much! .{" "}
-                            <i className="mdi mdi-format-quote-close" />
-                        </p>
-                        <p>- Hyper Admin User</p>
-                    </div>
-                </div>
             </div>
+            <QuenMatKhau isModalVisible={isModalVisible} setIsModalVisible={setIsModalVisible} />
         </div>
     );
 }
